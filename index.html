@@ -6,21 +6,16 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab 9</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 
+  <!-- Step 5: TrackJS snippet - replace YOUR_TOKEN with your actual token -->
+  <script>window._trackJs = { token: "dd105c0c02904587a5953530fe439257" };</script>
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
+ 
   <style>
-    button {
-      margin: 3px;
-    }
-
-    button:hover {
-      cursor: pointer;
-    }
-
-    #first-num,
-    #second-num {
-      width: 60px;
-    }
-
+    button { margin: 3px; }
+    button:hover { cursor: pointer; }
+    #first-num, #second-num { width: 60px; }
     output {
       border: 1px solid gray;
       display: block;
@@ -29,11 +24,7 @@
       padding: 5px;
       width: 240px;
     }
-
-    main {
-      width: 800px;
-    }
-
+    main { width: 800px; }
     #error-btns {
       column-gap: 5px;
       display: flex;
@@ -41,14 +32,10 @@
       margin-top: 30px;
       row-gap: 5px;
     }
-
-    #error-btns>* {
-      padding: 8px 2px;
-      width: 122px;
-    }
+    #error-btns>* { padding: 8px 2px; width: 122px; }
   </style>
 </head>
-
+ 
 <body>
   <main>
     <form>
@@ -67,7 +54,7 @@
         <output></output>
       </fieldset>
     </form>
-
+ 
     <section id="error-btns">
       <button>Console Log</button>
       <button>Console Error</button>
@@ -86,8 +73,18 @@
       <button>Trigger a Global Error</button>
     </section>
   </main>
-
+ 
   <script>
+    // ── Step 2: Calculator with try/catch/finally and custom errors ──────────
+ 
+    // Step 4: Custom error class extending Error
+    class ValidationError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = 'ValidationError';
+      }
+    }
+ 
     let form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -95,14 +92,137 @@
       let firstNum = document.querySelector('#first-num').value;
       let secondNum = document.querySelector('#second-num').value;
       let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+ 
+      // Step 3: try/catch/finally with a realistic throw scenario
+      try {
+        if (firstNum === '' || secondNum === '') {
+          throw new ValidationError('Both fields must be filled in');
+        }
+        if (isNaN(firstNum) || isNaN(secondNum)) {
+          throw new ValidationError('Inputs must be numbers');
+        }
+        if (operator === '/' && Number(secondNum) === 0) {
+          throw new ValidationError('Cannot divide by zero');
+        }
+        output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+      } catch (err) {
+        if (err instanceof ValidationError) {
+          output.innerHTML = `ValidationError: ${err.message}`;
+          console.error(`[${err.name}]`, err.message);
+        } else {
+          output.innerHTML = `Unexpected error: ${err.message}`;
+          console.error('Unexpected error:', err);
+        }
+      } finally {
+        console.log('Calculator evaluation finished');
+      }
     });
-
+ 
+    // ── Step 5: Global error handler ─────────────────────────────────────────
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.log('Global error caught via window.onerror');
+      console.log('Message:', message);
+      console.log('Source:', source);
+      console.log('Line:', lineno, 'Col:', colno);
+      // In a real app you'd also POST this to your own server, e.g.:
+      // fetch('/log-error', { method: 'POST', body: JSON.stringify({ message, source, lineno }) });
+      return true; // prevents the default browser error from also firing
+    };
+ 
+    // window.addEventListener('error') alternative — both work
+    window.addEventListener('error', (event) => {
+      console.log('Global error also caught via addEventListener:', event.message);
+    });
+ 
+    // ── Step 2: Console API buttons ──────────────────────────────────────────
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
-
-    // Start your code here
-    // You may move this JS to another file if you wish
+ 
+    const sampleData = [
+      { name: 'Alice', role: 'Engineer' },
+      { name: 'Bob',   role: 'Designer' },
+    ];
+ 
+    // Console Log
+    errorBtns[0].addEventListener('click', () => {
+      console.log('Console.log demo:', sampleData);
+    });
+ 
+    // Console Error
+    errorBtns[1].addEventListener('click', () => {
+      console.error('Console.error demo: something went wrong');
+    });
+ 
+    // Console Count
+    errorBtns[2].addEventListener('click', () => {
+      console.count('Console Count clicks');
+    });
+ 
+    // Console Warn
+    errorBtns[3].addEventListener('click', () => {
+      console.warn('Console.warn demo: this is a warning');
+    });
+ 
+    // Console Assert
+    errorBtns[4].addEventListener('click', () => {
+      // Passing assertion — silent
+      console.assert(1 === 1, 'This will not show');
+      // Failing assertion — prints message
+      console.assert(1 === 2, 'Console.assert demo: 1 does not equal 2');
+    });
+ 
+    // Console Clear
+    errorBtns[5].addEventListener('click', () => {
+      console.clear();
+    });
+ 
+    // Console Dir
+    errorBtns[6].addEventListener('click', () => {
+      console.dir(document.querySelector('form'));
+    });
+ 
+    // Console dirxml
+    errorBtns[7].addEventListener('click', () => {
+      console.dirxml(document.querySelector('form'));
+    });
+ 
+    // Console Group Start
+    errorBtns[8].addEventListener('click', () => {
+      console.group('Demo Group');
+      console.log('First item in group');
+      console.log('Second item in group');
+      // leave open so Group End button closes it
+    });
+ 
+    // Console Group End
+    errorBtns[9].addEventListener('click', () => {
+      console.groupEnd();
+    });
+ 
+    // Console Table
+    errorBtns[10].addEventListener('click', () => {
+      console.table(sampleData);
+    });
+ 
+    // Start Timer
+    errorBtns[11].addEventListener('click', () => {
+      console.time('myTimer');
+    });
+ 
+    // End Timer
+    errorBtns[12].addEventListener('click', () => {
+      console.timeEnd('myTimer');
+    });
+ 
+    // Console Trace
+    errorBtns[13].addEventListener('click', () => {
+      console.trace('Console.trace demo');
+    });
+ 
+    // Trigger a Global Error (Step 5) — intentionally uncaught
+    errorBtns[14].addEventListener('click', () => {
+      undefinedFunction(); // ReferenceError — caught by window.onerror above
+    });
   </script>
 </body>
-
+ 
 </html>
